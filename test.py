@@ -97,6 +97,18 @@ def inputProd(url):
         indexNext = data.find("label", indexNext + 1)
     return dictProd
 
+def lista_store(prod_x):
+    for store in prod_x.keys():
+        luna = 1
+        while prod_x[store][luna] == None:
+            luna += 1
+        else:
+            vinit = prod_x[store][luna]
+        for x in prod_x[store].keys():
+            if prod_x[store][x] != None:
+                prod_x[store][x] = round((prod_x[store][x] - vinit)*100/vinit, 2)
+    return prod_x
+
 url = 'https://www.istoric-preturi.info/pd/19463161/MHDA3RM/A/telefon-mobil-iphone-11-64gb-fara-incarcator-si-casti-black'
 
 f = open("citire.txt")
@@ -104,17 +116,20 @@ f = open("citire.txt")
 #dictMag = {NumeMag : {luna : [suma val tuturor produselor din acea luna, nr de val]}}
 for line in f:
     dictProd = inputProd(line)
+    dictProd = lista_store(dictProd)
     for x in dictProd.keys():
         if x in dictMag:
             for i in range(12):
-                dictMag[x][i + 1] += dictProd[x][i + 1]
+                if dictProd[x][i + 1]:
+                    dictMag[x][i + 1][0] += dictProd[x][i + 1]
+                    dictMag[x][i + 1][1] += 1
         else:
-            dictMag[x] = {i + 1 : [dictProd[x][i + 1], 1] for i in range(12)}
+            dictMag[x] = {i + 1 : [dictProd[x][i + 1] if dictProd[x][i + 1] else 0, 1] for i in range(12)}
 #media aritmetica pe fiecare luna
 for x in dictMag.keys():
     for i in range(12):
-        dictMag[x][i + 1] = dictMag[x][i + 1][0] / dictMag[x][i + 1]
+        dictMag[x][i + 1] = round(dictMag[x][i + 1][0] / dictMag[x][i + 1][1], 2)
 
-    print(dictMag)
+print(dictMag)
 
 
