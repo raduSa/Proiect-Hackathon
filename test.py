@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = 'https://www.istoric-preturi.info/pd/41417057/IP155GR/telefon-mobil-apple-iphone-15-512-gb-5g-green'
+url = 'https://www.istoric-preturi.info/pd/19463161/MHDA3RM/A/telefon-mobil-iphone-11-64gb-fara-incarcator-si-casti-black'
 
 response = requests.get(url)
 
@@ -23,7 +23,7 @@ if response.status_code == 200:
 
 else:
     print('Failed to retrieve the webpage. Status code:', response.status_code)
-print(data)
+#print(data)
 
 indexDate = data.find("\"data\"")
 indexPret = data.find("\"datasets\"", indexDate + 1)
@@ -32,32 +32,66 @@ indexLast = data.find("\"options\"", indexPret + 1)
 l = data.find("[", indexDate, indexPret) + 1
 r = data.find("]", indexDate, indexPret)
 Date = data[l: r]
-Preturi = data[r + 1: indexLast]
+Preturi = data[r + 1 : indexLast]
 # creare lista de date dd/mm/yy
 ldates = list()
 for x in Date.split(","):
     ldates.append(x[1:len(x) - 1])
 
-# creare liste pt fiecare magazin
+# creare dictionar pt produs
 indexNext = data.find("label", indexPret + 1)
 
-#dictProdus = dict()
+dictProd = dict()
 while indexNext > 0:
-    res = list()
     l = data.find("[", indexNext) + 1
     r = data.find("]", indexNext)
-    Pret = data[l: r]
+    Pret = data[l: r] #partea din string cu preturile de la magazinul Nume
     indexNume1 = data.find(":", indexNext)
     indexNume2 = data.find(",", indexNext)
-    Nume = data[indexNume1 + 2: indexNume2 - 1]
-    res.append(Nume)
+    Nume = data[indexNume1 + 2: indexNume2 - 1]#Nume magazin
+    dictProd[Nume] = {x + 1 : [] for x in range(12)}
+    valid = False
+
     for i, x in enumerate(Pret.split(",")):
         if x == "null":
             pass
         else:
             index = x.find(".")
-            res.append((ldates[i], int(x[1:index]) + 1))
+            pret = int(x[1:index]) + 1
+            luna = ldates[i][3 : 6]
+            an = int(ldates[i][7 : 11])
+            if int(an) == 2023:
+                valid = True
+                if luna == "Ian":
+                    dictProd[Nume][1].append(pret)
+                elif luna == "Feb":
+                    dictProd[Nume][2].append(pret)
+                elif luna == "Mar":
+                    dictProd[Nume][3].append(pret)
+                elif luna == "Apr":
+                    dictProd[Nume][4].append(pret)
+                elif luna == "Mai":
+                    dictProd[Nume][5].append(pret)
+                elif luna == "Iun":
+                    dictProd[Nume][6].append(pret)
+                elif luna == "Iul":
+                    dictProd[Nume][7].append(pret)
+                elif luna == "Aug":
+                    dictProd[Nume][8].append(pret)
+                elif luna == "Sep":
+                    dictProd[Nume][9].append(pret)
+                elif luna == "Oct":
+                    dictProd[Nume][10].append(pret)
+                elif luna == "Noi":
+                    dictProd[Nume][11].append(pret)
+                else: dictProd[Nume][12].append(pret)
+    #daca nu are valori in anul respectiv e sters
+    if valid:
+        for i in range(12):
+            if dictProd[Nume][i + 1]:
+                dictProd[Nume][i + 1] = round(sum(dictProd[Nume][i + 1]) / len(dictProd[Nume][i + 1]), 2)
+            else: dictProd[Nume][i + 1] = None
+    else: del dictProd[Nume]
 
-    print(res)
     indexNext = data.find("label", indexNext + 1)
-
+print(dictProd)
